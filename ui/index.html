@@ -1,0 +1,1245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ayaan's Gmail Autoresponder Agent</title>
+    <style>
+        :root {
+            --primary: #4285f4;
+            --primary-dark: #3367d6;
+            --success: #34a853;
+            --warning: #fbbc04;
+            --danger: #ea4335;
+            --bg: #f8f9fa;
+            --card-bg: #ffffff;
+            --text: #202124;
+            --text-secondary: #5f6368;
+            --border: #dadce0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--primary), var(--primary-dark));
+            color: white;
+            padding: 24px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header h1 {
+            font-size: 24px;
+            font-weight: 600;
+        }
+
+        .header-status {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .status-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(255,255,255,0.2);
+            border-radius: 20px;
+            font-size: 14px;
+        }
+
+        .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            background: var(--danger);
+        }
+
+        .status-dot.connected {
+            background: var(--success);
+        }
+
+        /* Tab Navigation */
+        .tab-navigation {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 24px;
+            background: var(--card-bg);
+            padding: 8px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .tab-btn {
+            padding: 12px 24px;
+            border: none;
+            background: transparent;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+        }
+
+        .tab-btn:hover {
+            background: var(--bg);
+            color: var(--text);
+        }
+
+        .tab-btn.active {
+            background: var(--primary);
+            color: white;
+        }
+
+        .tab-content {
+            display: none;
+        }
+
+        .tab-content.active {
+            display: block;
+        }
+
+        /* Main Layout */
+        .main-layout {
+            display: grid;
+            grid-template-columns: 350px 1fr;
+            gap: 24px;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .card-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        /* Auth Section */
+        .auth-section .auth-status {
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            font-size: 14px;
+        }
+
+        .auth-status.authenticated {
+            background: #e6f4ea;
+            color: var(--success);
+        }
+
+        .auth-status.unauthenticated {
+            background: #fce8e6;
+            color: var(--danger);
+        }
+
+        .auth-email {
+            font-weight: 600;
+        }
+
+        /* Buttons */
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-primary {
+            background: var(--primary);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            background: var(--primary-dark);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text);
+        }
+
+        .btn-outline:hover:not(:disabled) {
+            background: var(--bg);
+        }
+
+        .btn-block {
+            width: 100%;
+        }
+
+        .btn-sm {
+            padding: 8px 16px;
+            font-size: 13px;
+        }
+
+        /* Input */
+        .input-group {
+            margin-bottom: 16px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 13px;
+            color: var(--text-secondary);
+            margin-bottom: 6px;
+        }
+
+        .input-group input,
+        .input-group textarea {
+            width: 100%;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            transition: border-color 0.2s;
+        }
+
+        .input-group input:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        /* Email List */
+        .email-controls {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .email-controls input {
+            flex: 1;
+            padding: 10px 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+        }
+
+        .email-list {
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .email-item {
+            padding: 16px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .email-item:hover {
+            border-color: var(--primary);
+            background: #f8f9ff;
+        }
+
+        .email-item.selected {
+            border-color: var(--primary);
+            background: #e8f0fe;
+        }
+
+        .email-number {
+            display: inline-block;
+            width: 24px;
+            height: 24px;
+            background: var(--primary);
+            color: white;
+            border-radius: 50%;
+            text-align: center;
+            line-height: 24px;
+            font-size: 12px;
+            margin-right: 8px;
+        }
+
+        .email-from {
+            font-weight: 600;
+            font-size: 14px;
+            margin-bottom: 4px;
+        }
+
+        .email-subject {
+            font-size: 13px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .email-date {
+            font-size: 12px;
+            color: var(--text-secondary);
+            margin-top: 4px;
+        }
+
+        /* Content Area */
+        .content-area {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+        }
+
+        /* Email Detail */
+        .email-detail {
+            display: none;
+        }
+
+        .email-detail.visible {
+            display: block;
+        }
+
+        .email-header {
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 16px;
+            margin-bottom: 16px;
+        }
+
+        .email-header h2 {
+            font-size: 20px;
+            margin-bottom: 8px;
+        }
+
+        .email-meta {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .email-body {
+            font-size: 14px;
+            line-height: 1.6;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+            padding: 16px;
+            background: var(--bg);
+            border-radius: 8px;
+        }
+
+        /* Draft Section */
+        .draft-section {
+            margin-top: 20px;
+            padding-top: 20px;
+            border-top: 1px solid var(--border);
+        }
+
+        .draft-section h3 {
+            font-size: 16px;
+            margin-bottom: 12px;
+            color: var(--primary);
+        }
+
+        .draft-content {
+            width: 100%;
+            min-height: 150px;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            font-size: 14px;
+            line-height: 1.6;
+            resize: vertical;
+        }
+
+        .draft-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+
+        .regenerate-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .regenerate-group .btn {
+            transition: all 0.2s;
+        }
+
+        .regenerate-group .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+        }
+
+        /* Auth Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .modal-overlay.visible {
+            display: flex;
+        }
+
+        .modal {
+            background: white;
+            padding: 32px;
+            border-radius: 16px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 90vh;
+            overflow-y: auto;
+        }
+
+        .modal h2 {
+            margin-bottom: 16px;
+        }
+
+        .modal-steps {
+            margin: 20px 0;
+        }
+
+        .modal-steps li {
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .auth-url-box {
+            background: var(--bg);
+            padding: 12px;
+            border-radius: 8px;
+            word-break: break-all;
+            font-size: 12px;
+            margin: 16px 0;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 20px;
+        }
+
+        /* Loading */
+        .loading {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255,255,255,0.3);
+            border-radius: 50%;
+            border-top-color: white;
+            animation: spin 1s linear infinite;
+        }
+
+        .loading-dark {
+            border-color: rgba(0,0,0,0.1);
+            border-top-color: var(--primary);
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Notifications */
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            padding: 16px 24px;
+            border-radius: 8px;
+            color: white;
+            font-size: 14px;
+            z-index: 2000;
+            animation: slideIn 0.3s ease;
+        }
+
+        .notification.success {
+            background: var(--success);
+        }
+
+        .notification.error {
+            background: var(--danger);
+        }
+
+        .notification.info {
+            background: var(--primary);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state svg {
+            width: 64px;
+            height: 64px;
+            margin-bottom: 16px;
+            opacity: 0.5;
+        }
+
+        /* Workflow Diagram Tab */
+        .diagram-container {
+            width: 100%;
+            height: calc(100vh - 250px);
+            min-height: 600px;
+            border: none;
+            border-radius: 12px;
+            background: white;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .diagram-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .diagram-header h2 {
+            font-size: 20px;
+            font-weight: 600;
+        }
+
+        /* Metrics Section */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .metric-value {
+            font-size: 32px;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .metric-label {
+            font-size: 14px;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        .metrics-raw {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 20px;
+            border-radius: 8px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+            white-space: pre;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .main-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header class="header">
+            <div>
+                <h1>📧 Ayaan's Gmail Autoresponder Agent</h1>
+            </div>
+            <div class="header-status">
+                <div class="status-badge">
+                    <span class="status-dot" id="gmailStatus"></span>
+                    <span id="gmailStatusText">Checking...</span>
+                </div>
+                <button class="btn btn-outline" onclick="openAuthModal()" id="authBtn" style="color: white; border-color: rgba(255,255,255,0.5);">
+                    🔐 Authenticate
+                </button>
+            </div>
+        </header>
+
+        <!-- Tab Navigation -->
+        <nav class="tab-navigation">
+            <button class="tab-btn active" onclick="switchTab('emails', this)">
+                📬 Emails
+            </button>
+            <button class="tab-btn" onclick="switchTab('workflow', this)">
+                📈 Workflow Diagram
+            </button>
+            <button class="tab-btn" onclick="switchTab('metrics', this)">
+                📊 Metrics
+            </button>
+        </nav>
+
+        <!-- Emails Tab -->
+        <div id="emails-tab" class="tab-content active">
+            <div class="main-layout">
+                <!-- Sidebar -->
+                <div class="sidebar">
+                    <!-- Auth Card -->
+                    <div class="card auth-section">
+                        <div class="card-title">🔑 Authentication</div>
+                        <div class="auth-status unauthenticated" id="authStatusBox">
+                            Not authenticated
+                        </div>
+                        <button class="btn btn-primary btn-block" onclick="openAuthModal()" id="connectBtn">
+                            Connect Gmail
+                        </button>
+                        <button class="btn btn-outline btn-block btn-sm" onclick="refreshToken()" style="margin-top: 8px; display: none;" id="refreshBtn">
+                            🔄 Refresh Token
+                        </button>
+                        <button class="btn btn-danger btn-block btn-sm" onclick="deleteToken()" style="margin-top: 8px; display: none;" id="disconnectBtn">
+                            ⛔ Disconnect
+                        </button>
+                    </div>
+
+                    <!-- Email List Card -->
+                    <div class="card">
+                        <div class="card-title">📬 Emails</div>
+                        <div class="email-controls">
+                            <input type="text" id="searchQuery" placeholder="is:unread" value="is:unread">
+                            <button class="btn btn-primary btn-sm" onclick="listEmails()">
+                                🔍
+                            </button>
+                        </div>
+                        <div class="email-list" id="emailList">
+                            <div class="empty-state">
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z" />
+                                </svg>
+                                <p>Click search to load emails</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Content Area -->
+                <div class="content-area">
+                    <div class="card email-detail" id="emailDetail">
+                        <div class="email-header">
+                            <h2 id="detailSubject">Subject</h2>
+                            <div class="email-meta">
+                                <strong>From:</strong> <span id="detailFrom"></span><br>
+                                <strong>Date:</strong> <span id="detailDate"></span>
+                            </div>
+                        </div>
+                        <div class="email-body" id="detailBody">
+                            Email content will appear here...
+                        </div>
+                        
+                        <div class="draft-section">
+                            <h3>✍️ AI-Generated Draft Reply <span id="currentTone" style="font-size: 12px; font-weight: normal; color: var(--text-secondary);">(Normal)</span></h3>
+                            <textarea class="draft-content" id="draftContent" placeholder="Draft reply will appear here after reading an email..."></textarea>
+                            <div class="draft-actions">
+                                <button class="btn btn-success" onclick="sendReply()" id="sendBtn">
+                                    ✉️ Send Reply
+                                </button>
+                                <div class="regenerate-group" style="display: flex; gap: 8px; flex-wrap: wrap;">
+                                    <button class="btn btn-outline btn-sm" onclick="regenerateDraftWithTone('normal')" title="Balanced, straightforward tone">
+                                        🔄 Normal
+                                    </button>
+                                    <button class="btn btn-outline btn-sm" onclick="regenerateDraftWithTone('friendly')" title="Warm, casual, and approachable" style="border-color: #f9ab00; color: #f9ab00;">
+                                        😊 Friendly
+                                    </button>
+                                    <button class="btn btn-outline btn-sm" onclick="regenerateDraftWithTone('professional')" title="Formal, official correspondence" style="border-color: #1a73e8; color: #1a73e8;">
+                                        🎓 Professional
+                                    </button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="card" id="emptyDetail">
+                        <div class="empty-state">
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0v5a2 2 0 01-2 2H6a2 2 0 01-2-2v-5m16 0h-2.586a1 1 0 00-.707.293l-2.414 2.414a1 1 0 01-.707.293h-3.172a1 1 0 01-.707-.293l-2.414-2.414A1 1 0 006.586 13H4" />
+                            </svg>
+                            <p>Select an email to view details and draft a reply</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Workflow Diagram Tab -->
+        <div id="workflow-tab" class="tab-content">
+            <div class="diagram-header">
+                <h2>📈 Workflow Diagram</h2>
+                <button class="btn btn-outline btn-sm" onclick="refreshDiagram()">
+                    🔄 Refresh
+                </button>
+            </div>
+            <iframe id="diagramFrame" class="diagram-container" src="" title="Workflow Diagram"></iframe>
+        </div>
+
+        <!-- Metrics Tab -->
+        <div id="metrics-tab" class="tab-content">
+            <div class="diagram-header">
+                <h2>📊 Prometheus Metrics</h2>
+                <button class="btn btn-outline btn-sm" onclick="refreshMetrics()">
+                    🔄 Refresh
+                </button>
+            </div>
+            
+            <div class="metrics-grid" id="metricsSummary">
+                <div class="metric-card">
+                    <div class="metric-value" id="metricEmailsRead">-</div>
+                    <div class="metric-label">Emails Read</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="metricEmailsSent">-</div>
+                    <div class="metric-label">Emails Sent</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="metricDraftsGenerated">-</div>
+                    <div class="metric-label">Drafts Generated</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="metricChatRequests">-</div>
+                    <div class="metric-label">Chat Requests</div>
+                </div>
+            </div>
+
+            <div class="card">
+                <div class="card-title">Raw Prometheus Metrics</div>
+                <pre class="metrics-raw" id="metricsRaw">Loading metrics...</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auth Modal -->
+    <div class="modal-overlay" id="authModal">
+        <div class="modal">
+            <h2>🔐 Gmail Authentication</h2>
+            <p>Follow these steps to connect your Gmail account:</p>
+            
+            <ol class="modal-steps">
+                <li><strong>Step 1:</strong> Click "Get Auth URL" below</li>
+                <li><strong>Step 2:</strong> Open the URL in a new tab and authorize</li>
+                <li><strong>Step 3:</strong> Copy the authorization code from Google</li>
+                <li><strong>Step 4:</strong> Paste the code below and click "Submit Code"</li>
+            </ol>
+
+            <button class="btn btn-primary btn-block" onclick="getAuthUrl()" id="getUrlBtn">
+                Get Auth URL
+            </button>
+
+            <div class="auth-url-box" id="authUrlBox" style="display: none;">
+                <a href="#" id="authUrlLink" target="_blank">Loading...</a>
+            </div>
+
+            <div class="input-group" style="margin-top: 20px;">
+                <label for="authCode">Authorization Code:</label>
+                <input type="text" id="authCode" placeholder="Paste authorization code here...">
+            </div>
+
+            <div class="modal-actions">
+                <button class="btn btn-success" onclick="submitAuthCode()" id="submitCodeBtn">
+                    Submit Code
+                </button>
+                <button class="btn btn-outline" onclick="closeAuthModal()">
+                    Cancel
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = window.API_URL || 'http://localhost:8000';
+        
+        let currentEmailNumber = null;
+        let emails = [];
+
+        document.addEventListener('DOMContentLoaded', () => {
+            checkAuthStatus();
+        });
+
+        // Tab Switching
+        function switchTab(tabName, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+
+            document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+            document.getElementById(`${tabName}-tab`).classList.add('active');
+
+            if (tabName === 'workflow') loadWorkflowDiagram();
+            else if (tabName === 'metrics') loadMetrics();
+        }
+
+        // Workflow Diagram
+        function loadWorkflowDiagram() {
+            const frame = document.getElementById('diagramFrame');
+            if (!frame.src || frame.src === '' || frame.src === window.location.href) {
+                frame.src = `${API_BASE}/workflow-diagram`;
+            }
+        }
+
+        function refreshDiagram() {
+            document.getElementById('diagramFrame').src = `${API_BASE}/workflow-diagram?t=${Date.now()}`;
+        }
+
+        // Metrics
+        async function loadMetrics() {
+            try {
+                const response = await fetch(`${API_BASE}/metrics`);
+                const metricsText = await response.text();
+                document.getElementById('metricsRaw').textContent = metricsText;
+                parseMetricsSummary(metricsText);
+            } catch (error) {
+                document.getElementById('metricsRaw').textContent = 'Error loading metrics: ' + error.message;
+            }
+        }
+
+        function refreshMetrics() {
+            loadMetrics();
+            notify('Metrics refreshed', 'info');
+        }
+
+        function parseMetricsSummary(metricsText) {
+            const emailsReadMatch = metricsText.match(/gmail_agent_emails_read_total\s+(\d+)/);
+            document.getElementById('metricEmailsRead').textContent = emailsReadMatch ? emailsReadMatch[1] : '0';
+
+            const emailsSentMatch = metricsText.match(/gmail_agent_emails_sent_total\s+(\d+)/);
+            document.getElementById('metricEmailsSent').textContent = emailsSentMatch ? emailsSentMatch[1] : '0';
+
+            const draftsMatch = metricsText.match(/gmail_agent_draft_replies_generated_total\s+(\d+)/);
+            document.getElementById('metricDraftsGenerated').textContent = draftsMatch ? draftsMatch[1] : '0';
+
+            let chatTotal = 0;
+            const chatMatches = metricsText.matchAll(/gmail_agent_chat_requests_total\{[^}]*\}\s+(\d+)/g);
+            for (const match of chatMatches) {
+                chatTotal += parseInt(match[1], 10);
+            }
+            document.getElementById('metricChatRequests').textContent = chatTotal.toString();
+        }
+
+        // Notifications
+        function notify(message, type = 'info') {
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.textContent = message;
+            document.body.appendChild(notification);
+            setTimeout(() => notification.remove(), 4000);
+        }
+
+        // Auth Status
+        async function checkAuthStatus() {
+            try {
+                const response = await fetch(`${API_BASE}/auth/status`);
+                const data = await response.json();
+                
+                const statusDot = document.getElementById('gmailStatus');
+                const statusText = document.getElementById('gmailStatusText');
+                const authStatusBox = document.getElementById('authStatusBox');
+                const connectBtn = document.getElementById('connectBtn');
+                const refreshBtn = document.getElementById('refreshBtn');
+                const disconnectBtn = document.getElementById('disconnectBtn');
+                
+                if (data.valid) {
+                    statusDot.classList.add('connected');
+                    statusText.textContent = data.email || 'Connected';
+                    authStatusBox.className = 'auth-status authenticated';
+                    authStatusBox.innerHTML = `✅ Connected as <span class="auth-email">${data.email || 'Gmail'}</span>`;
+                    connectBtn.style.display = 'none';
+                    refreshBtn.style.display = 'block';
+                    disconnectBtn.style.display = 'block';
+                } else {
+                    statusDot.classList.remove('connected');
+                    statusText.textContent = 'Not connected';
+                    authStatusBox.className = 'auth-status unauthenticated';
+                    authStatusBox.textContent = '❌ ' + (data.message || 'Not authenticated');
+                    connectBtn.style.display = 'block';
+                    refreshBtn.style.display = 'none';
+                    disconnectBtn.style.display = 'none';
+                }
+            } catch (error) {
+                document.getElementById('gmailStatusText').textContent = 'API Error';
+            }
+        }
+
+        // Auth Modal
+        function openAuthModal() {
+            document.getElementById('authModal').classList.add('visible');
+            document.getElementById('authUrlBox').style.display = 'none';
+            document.getElementById('authCode').value = '';
+        }
+
+        function closeAuthModal() {
+            document.getElementById('authModal').classList.remove('visible');
+        }
+
+        async function getAuthUrl() {
+            const btn = document.getElementById('getUrlBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Loading...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/url`);
+                const data = await response.json();
+                
+                const urlBox = document.getElementById('authUrlBox');
+                const urlLink = document.getElementById('authUrlLink');
+                
+                urlLink.href = data.auth_url;
+                urlLink.textContent = 'Click here to open authorization page';
+                urlBox.style.display = 'block';
+                window.open(data.auth_url, '_blank');
+                notify('Authorization page opened in new tab', 'info');
+            } catch (error) {
+                notify('Failed to get auth URL: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Get Auth URL';
+            }
+        }
+
+        async function submitAuthCode() {
+            const code = document.getElementById('authCode').value.trim();
+            if (!code) {
+                notify('Please enter the authorization code', 'error');
+                return;
+            }
+            
+            const btn = document.getElementById('submitCodeBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Submitting...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/auth/callback`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok && data.success) {
+                    notify('Successfully connected to Gmail!', 'success');
+                    closeAuthModal();
+                    checkAuthStatus();
+                } else {
+                    notify('Authentication failed: ' + (data.detail || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                notify('Failed to submit code: ' + error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.textContent = 'Submit Code';
+            }
+        }
+
+        async function refreshToken() {
+            try {
+                const response = await fetch(`${API_BASE}/auth/refresh`, { method: 'POST' });
+                const data = await response.json();
+                
+                if (data.success) {
+                    notify('Token refreshed successfully', 'success');
+                    checkAuthStatus();
+                } else {
+                    notify('Failed to refresh: ' + (data.error || 'Unknown error'), 'error');
+                }
+            } catch (error) {
+                notify('Failed to refresh token: ' + error.message, 'error');
+            }
+        }
+
+        async function deleteToken() {
+            if (!confirm('Are you sure you want to disconnect Gmail?')) return;
+            
+            try {
+                await fetch(`${API_BASE}/auth/token`, { method: 'DELETE' });
+                notify('Gmail disconnected', 'info');
+                checkAuthStatus();
+                
+                document.getElementById('emailList').innerHTML = `
+                    <div class="empty-state"><p>Connect Gmail to load emails</p></div>
+                `;
+                document.getElementById('emailDetail').classList.remove('visible');
+                document.getElementById('emptyDetail').style.display = 'block';
+            } catch (error) {
+                notify('Failed to disconnect: ' + error.message, 'error');
+            }
+        }
+
+        // Email Operations
+        async function listEmails() {
+            const query = document.getElementById('searchQuery').value || 'is:unread';
+            const emailList = document.getElementById('emailList');
+            
+            emailList.innerHTML = '<div class="empty-state"><span class="loading loading-dark"></span><p>Loading emails...</p></div>';
+            
+            try {
+                const response = await fetch(`${API_BASE}/emails/list`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ max_results: 20, query })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to load emails');
+                }
+                
+                const data = await response.json();
+                emails = data.emails || [];
+                
+                if (emails.length === 0) {
+                    emailList.innerHTML = '<div class="empty-state"><p>No emails found</p></div>';
+                    return;
+                }
+                
+                emailList.innerHTML = emails.map(email => `
+                    <div class="email-item" onclick="readEmail(${email.number})" data-number="${email.number}">
+                        <div class="email-from">
+                            <span class="email-number">${email.number}</span>
+                            ${escapeHtml(email.from || 'Unknown')}
+                        </div>
+                        <div class="email-subject">${escapeHtml(email.subject || '(No subject)')}</div>
+                        <div class="email-date">${email.date || ''}</div>
+                    </div>
+                `).join('');
+                
+                notify(`Loaded ${emails.length} emails`, 'success');
+            } catch (error) {
+                emailList.innerHTML = `<div class="empty-state"><p style="color: var(--danger);">Error: ${error.message}</p></div>`;
+                notify(error.message, 'error');
+            }
+        }
+
+        async function readEmail(number) {
+            currentEmailNumber = number;
+            
+            document.querySelectorAll('.email-item').forEach(el => {
+                el.classList.toggle('selected', el.dataset.number == number);
+            });
+            
+            const detailSection = document.getElementById('emailDetail');
+            const emptySection = document.getElementById('emptyDetail');
+            
+            detailSection.classList.add('visible');
+            emptySection.style.display = 'none';
+            
+            document.getElementById('detailSubject').textContent = 'Loading...';
+            document.getElementById('detailFrom').textContent = '';
+            document.getElementById('detailDate').textContent = '';
+            document.getElementById('detailBody').textContent = 'Loading email content...';
+            document.getElementById('draftContent').value = 'Generating AI draft...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/emails/read`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ email_number: number, generate_draft: true })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to read email');
+                }
+                
+                const data = await response.json();
+                
+                document.getElementById('detailSubject').textContent = data.subject || '(No subject)';
+                document.getElementById('detailFrom').textContent = data.from || 'Unknown';
+                document.getElementById('detailDate').textContent = data.date || '';
+                document.getElementById('detailBody').textContent = data.body || '(No content)';
+                document.getElementById('draftContent').value = data.draft_reply || '(No draft generated)';
+                
+            } catch (error) {
+                document.getElementById('detailBody').textContent = 'Error: ' + error.message;
+                document.getElementById('draftContent').value = '';
+                notify(error.message, 'error');
+            }
+        }
+
+        async function regenerateDraft() {
+            if (!currentEmailNumber) {
+                notify('No email selected', 'error');
+                return;
+            }
+            await readEmail(currentEmailNumber);
+        }
+
+        async function regenerateDraftWithTone(tone) {
+            if (!currentEmailNumber) {
+                notify('No email selected', 'error');
+                return;
+            }
+            
+            const toneLabels = {
+                'normal': 'Normal',
+                'friendly': 'Friendly',
+                'professional': 'Professional'
+            };
+            
+            document.getElementById('draftContent').value = `Generating ${toneLabels[tone]} draft...`;
+            document.getElementById('currentTone').textContent = `(${toneLabels[tone]})`;
+            
+            try {
+                const response = await fetch(`${API_BASE}/emails/regenerate-draft`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        email_number: currentEmailNumber,
+                        tone: tone
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to regenerate draft');
+                }
+                
+                const data = await response.json();
+                document.getElementById('draftContent').value = data.draft_reply || '(No draft generated)';
+                notify(`${toneLabels[tone]} draft generated!`, 'success');
+                
+            } catch (error) {
+                document.getElementById('draftContent').value = '';
+                notify(error.message, 'error');
+            }
+        }
+
+        async function sendReply() {
+            if (!currentEmailNumber) {
+                notify('No email selected', 'error');
+                return;
+            }
+            
+            const replyBody = document.getElementById('draftContent').value.trim();
+            if (!replyBody) {
+                notify('Reply cannot be empty', 'error');
+                return;
+            }
+            
+            if (!confirm('Are you sure you want to send this reply?')) return;
+            
+            const btn = document.getElementById('sendBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<span class="loading"></span> Sending...';
+            
+            try {
+                const response = await fetch(`${API_BASE}/emails/reply`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ 
+                        email_number: currentEmailNumber,
+                        reply_body: replyBody
+                    })
+                });
+                
+                if (!response.ok) {
+                    const error = await response.json();
+                    throw new Error(error.detail || 'Failed to send reply');
+                }
+                
+                notify('Reply sent successfully!', 'success');
+                listEmails();
+                
+            } catch (error) {
+                notify(error.message, 'error');
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '✉️ Send Reply';
+            }
+        }
+
+        function escapeHtml(text) {
+            const div = document.createElement('div');
+            div.textContent = text;
+            return div.innerHTML;
+        }
+    </script>
+</body>
+</html>

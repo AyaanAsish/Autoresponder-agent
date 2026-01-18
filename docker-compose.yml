@@ -1,0 +1,45 @@
+services:
+  # Backend API
+  ayaan-gmail-agent:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: ayaan-gmail-agent
+    ports:
+      - "8000:8000"
+    environment:
+      - OLLAMA_API_KEY=${OLLAMA_API_KEY}
+      - OLLAMA_BASE_URL=${OLLAMA_BASE_URL:-https://api.ollama.com}
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2}
+      - GMAIL_CLIENT_ID=${GMAIL_CLIENT_ID}
+      - GMAIL_CLIENT_SECRET=${GMAIL_CLIENT_SECRET}
+    volumes:
+      # Mount token.json for OAuth persistence (created via API)
+      - ./token.json:/app/token.json:rw
+      # Mount credentials.json if using file-based auth
+      - ./app/credentials.json:/app/app/credentials.json:ro
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+  # Frontend UI
+  ayaan-gmail-ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+    container_name: ayaan-gmail-ui
+    ports:
+      - "3000:8080"
+    depends_on:
+      - ayaan-gmail-agent
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 3
+      start_period: 5s

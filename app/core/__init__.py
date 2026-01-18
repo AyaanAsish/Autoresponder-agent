@@ -1,0 +1,24 @@
+# Core module - Configuration and constants
+from .config import (
+    OLLAMA_API_KEY,
+    OLLAMA_BASE_URL,
+    OLLAMA_MODEL,
+    GMAIL_CLIENT_ID,
+    GMAIL_CLIENT_SECRET,
+    GMAIL_REFRESH_TOKEN,
+    TOKEN_FILE,
+    CREDENTIALS_FILE,
+    GMAIL_SCOPES,
+)
+
+__all__ = [
+    "OLLAMA_API_KEY",
+    "OLLAMA_BASE_URL",
+    "OLLAMA_MODEL",
+    "GMAIL_CLIENT_ID",
+    "GMAIL_CLIENT_SECRET",
+    "GMAIL_REFRESH_TOKEN",
+    "TOKEN_FILE",
+    "CREDENTIALS_FILE",
+    "GMAIL_SCOPES",
+]

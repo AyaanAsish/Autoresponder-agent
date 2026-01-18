@@ -1,0 +1,41 @@
+#!/bin/bash
+# ===========================================
+# Ayaan's Gmail Autoresponder Agent - Personal Config Template
+# ===========================================
+# Copy this file to setup-personal.sh and fill in your values:
+#   cp scripts/setup-personal.sh.template scripts/setup-personal.sh
+#
+# DO NOT COMMIT setup-personal.sh TO GIT!
+#
+# Note: This script only creates .env and credentials.json
+#       token.json is generated via the /auth/url and /auth/callback APIs
+
+set -e
+
+echo "Loading personal credentials..."
+
+# Create .env
+cat > .env << 'EOF'
+# Ayaan's Gmail Autoresponder Agent Configuration
+
+# Ollama API
+OLLAMA_API_KEY=your_ollama_api_key_here
+OLLAMA_BASE_URL=https://ollama.com
+OLLAMA_MODEL=llama3.2
+
+# Gmail OAuth
+GMAIL_CLIENT_ID=your_client_id.apps.googleusercontent.com
+GMAIL_CLIENT_SECRET=your_client_secret
+EOF
+echo "✓ .env created"
+
+# Create credentials.json
+cat > app/credentials.json << 'EOF'
+{"installed":{"client_id":"your_client_id.apps.googleusercontent.com","project_id":"your-project-id","auth_uri":"https://accounts.google.com/o/oauth2/auth","token_uri":"https://oauth2.googleapis.com/token","auth_provider_x509_cert_url":"https://www.googleapis.com/oauth2/v1/certs","client_secret":"your_client_secret","redirect_uris":["http://localhost"]}}
+EOF
+echo "✓ app/credentials.json created"
+
+echo ""
+echo "Personal credentials loaded successfully!"
+echo ""
+echo "Next: Start server and use /auth/url API to generate token"
